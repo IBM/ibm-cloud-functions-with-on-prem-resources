@@ -1,0 +1,50 @@
+# Initial Manifest
+---
+packages:
+  interact-with-on-prem-2:
+    actions:
+      get-object-request:
+        function: actions/get-object.js
+        runtime: nodejs:8
+        web-export: true
+        inputs:
+          CLOUD_HOST: $CLOUD_HOST
+      get-bucket-request:
+        function: actions/get-bucket-objects.js
+        runtime: nodejs:8
+        web-export: true
+        inputs:
+          CLOUD_HOST: $CLOUD_HOST
+      create-bucket-request:
+        function: actions/create-bucket.js
+        runtime: nodejs:8
+        web-export: true
+        inputs:
+          CLOUD_HOST: $CLOUD_HOST
+      create-object-request:
+        function: actions/create-object.js
+        runtime: nodejs:8
+        web-export: true
+        inputs:
+          CLOUD_HOST: $CLOUD_HOST
+    apis:
+      sample-api-gateway-get:
+        get:
+          object:
+            get-object-request:
+              method: GET
+              response: http
+          objects:
+            get-bucket-request:
+              method: GET
+              response: http
+      sample-api-gateway-create:
+        create:
+          bucket:
+            create-bucket-request:
+              method: POST
+              response: http
+          object:
+            create-object-request:
+              method: POST
+              response: http

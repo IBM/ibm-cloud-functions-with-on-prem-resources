@@ -1,0 +1,20 @@
+# Initial Manifest
+---
+packages:
+  interact-with-on-prem:
+    dependencies:
+      couchdb-binding:
+        location: /whisk.system/cloudant
+        inputs:
+          username: admin
+          password: password
+          host: $CLOUD_HOST
+    triggers:
+      couchdb-changes-trigger:
+        source: couchdb-binding/changes
+        inputs:
+          dbname: testdb
+    rules:
+      couchdb-trigger-rule:
+        trigger: couchdb-changes-trigger
+        action: /whisk.system/utils/echo

@@ -32,6 +32,7 @@
 ![](docs/step-10.png)
 
 8. On the Clients tab, click on Connect Client and download the appropiate installer for your system. Then run the Secure Gateway Client and enter your Gateway ID and Security Token.
+> If you're planning on using Docker to run the Secure Gateway Client, add `--network=host` to the "docker run" arguments. e.g. `docker run -it --network=host ibmcom/secure-gateway-client <GATEWAY_ID> -t <TOKEN>`. This makes the client connect to the host network (127.0.0.1) properly.
 
 ![](docs/step-11.png)
 ![](docs/step-12.png)

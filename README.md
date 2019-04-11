@@ -2,7 +2,7 @@
 
 The application demonstrates [IBM Cloud Functions](https://www.ibm.com/cloud/functions) (based on Apache OpenWhisk) that interacts with on-premise resources by using [Secure Gateway](https://www.ibm.com/cloud/secure-gateway). The use case demonstrates how you can allow IBM Cloud Functions access to your on-premise resources such as databases and web applications. This code pattern uses a local CouchDB deployment that will be accessed by the serverless functions. This code pattern will also use a local Minio, an open source object storage server, and will be served through a local Node.js web application. The local resources will be exposed through a Secure Gateway tunnel.
 
-The serverless functions for CouchDB will utilize the existing [OpenWhisk's Cloudant package](https://cloud.ibm.com/docs/openwhisk/cloudant_actions.html#cloudant_actions). This is possible since Cloudant is based on CouchDB and has almost similar [APIs](https://cloud.ibm.com/docs/services/Cloudant/api/compare.html#comparison-of-ibm-cloudant-and-couchdb-api-endpoints). An action will be triggered by changes in the database. In this case, the action will output the document ID. Other actions such as creating and reading a document can be invoked through the `wsk` command. Another scenario is executing actions via REST APIs. The actions will interact with the local Node.js web application that's using an object storage. The actions will create a bucket and an object from a URL. All the actions will utilize the Secure Gateway tunnel.
+The serverless functions for CouchDB will utilize the existing [OpenWhisk's Cloudant package](https://cloud.ibm.com/docs/openwhisk/cloudant_actions.html#cloudant_actions). This is possible since Cloudant is based on CouchDB and has almost similar [APIs](https://cloud.ibm.com/docs/services/Cloudant/api/compare.html#comparison-of-ibm-cloudant-and-couchdb-api-endpoints). An action will be triggered by changes in the database. In this case, the action will output the document ID. Other actions such as creating and reading a document can be invoked through the `wsk` or `ibmcloud fn` command. Another scenario is executing actions via REST APIs. The actions will interact with the local Node.js web application that's using an object storage. The actions will create a bucket and an object from a URL. All the actions will utilize the Secure Gateway tunnel.
 
 When the reader has completed this Code Pattern, they will understand how to:
 
@@ -20,6 +20,14 @@ When the reader has completed this Code Pattern, they will understand how to:
 5. The user can also interact with serverless functions via REST APIs by using API Gateway that is easily integrated with IBM Cloud Functions.
 6. The actions are doing http requests to the available cloud host that is exposed by the Secure Gateway service.
 7. All the interaction with the on-prem database goes through a tunnel via the Secure Gateway service that is also installed in the on-prem environment.
+
+# Prerequisites
+
+* [IBM Cloud Functions CLI](https://cloud.ibm.com/openwhisk/learn/cli) to create cloud functions from the terminal. Make sure you do the command `ibmcloud fn api list` so that your `~/.wskprops` is pointing to the right account.
+
+* [Whisk Deploy _(wskdeploy)_](https://github.com/apache/incubator-openwhisk-wskdeploy) is a utility to help you describe and deploy any part of the OpenWhisk programming model using a Manifest file written in YAML. You'll use it to deploy all the Cloud Function resources using a single command. You can download it from the [releases page](https://github.com/apache/incubator-openwhisk-wskdeploy/releases) and select the appropriate file for your system.
+
+> You can also use `ibmcloud fn deploy`. This has the same functionality integrated with the `ibmcloud` CLI.
 
 # Steps
 1. [Clone the repo](#1-clone-the-repo)
@@ -74,12 +82,16 @@ First, export the Cloud Host in an environment variable that you have from your 
 $ export CLOUD_HOST="cap-us-east-prd-sg-bm-03.integration.ibmcloud.com:15006"
 ```
 
-Then deploy the set of IBM Cloud Function resources with `wskdeploy`
+Then deploy the set of IBM Cloud Function resources with `ibmcloud fn deploy` or `wskdeploy`. The [manifest-couchdb.yaml](manifest-couchdb.yaml) and [manifest-webapp-minio.yaml](manifest-webapp-minio.yaml) describes all the Actions, Packages, Triggers and Rules and deploys them with one command.
 
 ```
-$ wskdeploy -m manifest-couchdb.yaml
-$ wskdeploy -m manifest-webapp-minio.yaml
+$ ibmcloud fn deploy -m manifest-couchdb.yaml
+$ ibmcloud fn deploy -m manifest-webapp-minio.yaml
 ```
+
+> You may want to undeploy them later with `ibmcloud fn undeploy`
+
+> Want to learn more about `wskdeploy`? Check out the [repository](https://github.com/apache/incubator-openwhisk-wskdeploy#Whisk-Deploy-wskdeploy)
 
 ### 5. Test with database events
 
@@ -99,7 +111,7 @@ Verify that an action is triggered by the event of inserting a document in the d
 You can also invoke available actions from the Cloudant package. Try invoking the `create-document` action that will create a document in your local couchdb deployment.
 
 ```
-$ ibmcloud wsk action invoke couchdb-binding/create-document --param dbname testdb --param doc '{"_id":"sample-document-1"}' --result
+$ ibmcloud fn action invoke couchdb-binding/create-document --param dbname testdb --param doc '{"_id":"sample-document-1"}' --result
 
 {
     "id": "sample-document-1",
@@ -112,7 +124,7 @@ $ ibmcloud wsk action invoke couchdb-binding/create-document --param dbname test
 Read your recently created document with `read-document` action.
 
 ```
-$ ibmcloud wsk action invoke couchdb-binding/read-document --param dbname testdb --param docid sample-document-1 --result
+$ ibmcloud fn action invoke couchdb-binding/read-document --param dbname testdb --param docid sample-document-1 --result
 
 {
     "_id": "sample-document-1",
@@ -138,7 +150,7 @@ Edit the destination for your Secure Gateway to the port 8080 which is the web a
 Get the list of the current APIs' URL created for your actions.
 
 ```
-$ ibmcloud wsk api list sample-api-gateway-create
+$ ibmcloud fn api list sample-api-gateway-create
 
 # Result #
 Action                                      Verb                   API Name  URL
@@ -167,7 +179,7 @@ $ curl -X POST -H 'Content-type: application/json' -d '{"imageUrl":"https://news
 Get another list of APIs.
 
 ```
-$ ibmcloud wsk api list sample-api-gateway-get
+$ ibmcloud fn api list sample-api-gateway-get
 
 # Result #
 Action                                      Verb                   API Name  URL
@@ -200,13 +212,13 @@ You can now clean up the resources you created.
 ```
 $ docker stop couchdb-test
 $ docker stop minio-test
-$ wskdeploy -m manifest-couchdb.yaml undeploy
-$ wskdeploy -m manifest-webapp-minio.yaml undeploy
+$ ibmcloud fn undeploy -m manifest-couchdb.yaml
+$ ibmcloud fn undeploy -m manifest-webapp-minio.yaml
 ```
 
 # Alternative Deployment Methods
 
-### Deploy manually with the `ibmcloud wsk` command line tool
+### Deploy manually with the `ibmcloud fn` command line tool
 
 This approach shows you how to deploy individual the packages, actions, triggers, and rules with CLI commands. It helps you understand and control the underlying deployment artifacts.
 
@@ -219,7 +231,7 @@ $ export CLOUD_HOST="cap-us-east-prd-sg-bm-03.integration.ibmcloud.com:15006"
 * Bind the Cloudant package
 
 ```
-$ ibmcloud wsk package bind /whisk.system/cloudant couchdb-binding \
+$ ibmcloud fn package bind /whisk.system/cloudant couchdb-binding \
 -p username admin \
 -p password password \
 -p host ${CLOUD_HOST}
@@ -230,7 +242,7 @@ $ ibmcloud wsk package bind /whisk.system/cloudant couchdb-binding \
 This will listen to changes on the `testdb` database
 
 ```
-$ ibmcloud wsk trigger create couchdb-changes-trigger --feed couchdb-binding/changes \
+$ ibmcloud fn trigger create couchdb-changes-trigger --feed couchdb-binding/changes \
 --param dbname testdb
 ```
 
@@ -239,7 +251,7 @@ $ ibmcloud wsk trigger create couchdb-changes-trigger --feed couchdb-binding/cha
 The rule connects the trigger to an action.
 
 ```
-$ ibmcloud wsk rule create couchdb-trigger-rule couchdb-changes-trigger /whisk.system/utils/echo
+$ ibmcloud fn rule create couchdb-trigger-rule couchdb-changes-trigger /whisk.system/utils/echo
 ```
 
 This connects the trigger to a simple `echo` action that just outputs the input which would be the database event.
@@ -249,26 +261,26 @@ This connects the trigger to a simple `echo` action that just outputs the input 
 Create a package to organize the actions that will be created for this repo.
 
 ```
-$ ibmcloud wsk package create interact-with-on-prem
-$ ibmcloud wsk package create interact-with-on-prem-2
+$ ibmcloud fn package create interact-with-on-prem
+$ ibmcloud fn package create interact-with-on-prem-2
 ```
 
 Create actions that interact with the web app
 
 ```
-$ ibmcloud wsk action create interact-with-on-prem-2/get-object-request actions/get-object.js \
+$ ibmcloud fn action create interact-with-on-prem-2/get-object-request actions/get-object.js \
 --kind nodejs:8 \
 --param CLOUD_HOST $CLOUD_HOST
 
-$ ibmcloud wsk action create interact-with-on-prem-2/get-bucket-request actions/get-bucket-objects.js \
+$ ibmcloud fn action create interact-with-on-prem-2/get-bucket-request actions/get-bucket-objects.js \
 --kind nodejs:8 \
 --param CLOUD_HOST $CLOUD_HOST
 
-$ ibmcloud wsk action create interact-with-on-prem-2/create-bucket-request actions/create-bucket.js \
+$ ibmcloud fn action create interact-with-on-prem-2/create-bucket-request actions/create-bucket.js \
 --kind nodejs:8 \
 --param CLOUD_HOST $CLOUD_HOST
 
-$ ibmcloud wsk action create interact-with-on-prem-2/create-object-request actions/create-object.js \
+$ ibmcloud fn action create interact-with-on-prem-2/create-object-request actions/create-object.js \
 --kind nodejs:8 \
 --param CLOUD_HOST $CLOUD_HOST
 ```
@@ -276,10 +288,10 @@ $ ibmcloud wsk action create interact-with-on-prem-2/create-object-request actio
 * Create REST APIs
 
 ```
-$ ibmcloud wsk api create /get /object get interact-with-on-prem-2/get-object-request -n sample-api-gateway-get --response-type http
-$ ibmcloud wsk api create /get /objects get interact-with-on-prem-2/get-bucket-request -n sample-api-gateway-get --response-type http
-$ ibmcloud wsk api create /create /bucket post interact-with-on-prem-2/create-bucket-request -n sample-api-gateway-create --response-type http
-$ ibmcloud wsk api create /create /object post interact-with-on-prem-2/create-object-request -n sample-api-gateway-create --response-type http
+$ ibmcloud fn api create /get /object get interact-with-on-prem-2/get-object-request -n sample-api-gateway-get --response-type http
+$ ibmcloud fn api create /get /objects get interact-with-on-prem-2/get-bucket-request -n sample-api-gateway-get --response-type http
+$ ibmcloud fn api create /create /bucket post interact-with-on-prem-2/create-bucket-request -n sample-api-gateway-create --response-type http
+$ ibmcloud fn api create /create /object post interact-with-on-prem-2/create-object-request -n sample-api-gateway-create --response-type http
 ```
 
 You can now proceed to the [next step](#5-test-with-database-events).
@@ -287,17 +299,17 @@ You can now proceed to the [next step](#5-test-with-database-events).
 * To delete them later:
 
 ```
-$ ibmcloud wsk trigger delete couchdb-changes-trigger
-$ ibmcloud wsk rule delete couchdb-trigger-rule
-$ ibmcloud wsk package delete couchdb-binding
-$ ibmcloud wsk package delete interact-with-on-prem
-$ ibmcloud wsk action delete interact-with-on-prem-2/get-object-request
-$ ibmcloud wsk action delete interact-with-on-prem-2/get-bucket-request
-$ ibmcloud wsk action delete interact-with-on-prem-2/create-object-request
-$ ibmcloud wsk action delete interact-with-on-prem-2/create-bucket-request
-$ ibmcloud wsk api delete sample-api-gateway-get
-$ ibmcloud wsk api delete sample-api-gateway-create
-$ ibmcloud wsk package delete interact-with-on-prem-2
+$ ibmcloud fn trigger delete couchdb-changes-trigger
+$ ibmcloud fn rule delete couchdb-trigger-rule
+$ ibmcloud fn package delete couchdb-binding
+$ ibmcloud fn package delete interact-with-on-prem
+$ ibmcloud fn action delete interact-with-on-prem-2/get-object-request
+$ ibmcloud fn action delete interact-with-on-prem-2/get-bucket-request
+$ ibmcloud fn action delete interact-with-on-prem-2/create-object-request
+$ ibmcloud fn action delete interact-with-on-prem-2/create-bucket-request
+$ ibmcloud fn api delete sample-api-gateway-get
+$ ibmcloud fn api delete sample-api-gateway-create
+$ ibmcloud fn package delete interact-with-on-prem-2
 ```
 
 ## License

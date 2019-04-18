@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/IBM/ibm-cloud-functions-with-on-prem-resources.svg?branch=master)](https://travis-ci.com/IBM/ibm-cloud-functions-with-on-prem-resources)
+
 # Create serverless functions that interacts with on-premise resources
 
 The application demonstrates [IBM Cloud Functions](https://www.ibm.com/cloud/functions) (based on Apache OpenWhisk) that interacts with on-premise resources by using [Secure Gateway](https://www.ibm.com/cloud/secure-gateway). The use case demonstrates how you can allow IBM Cloud Functions access to your on-premise resources such as databases and web applications. This code pattern uses a local CouchDB deployment that will be accessed by the serverless functions. This code pattern will also use a local Minio, an open source object storage server, and will be served through a local Node.js web application. The local resources will be exposed through a Secure Gateway tunnel.

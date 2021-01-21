@@ -2,6 +2,10 @@
 
 # Create serverless functions that interacts with on-premise resources
 
+## WARNING: This repository is no longer maintained. 
+
+This repository will not be updated. The repository will be kept available in read-only mode.
+
 The application demonstrates [IBM Cloud Functions](https://www.ibm.com/cloud/functions) (based on Apache OpenWhisk) that interacts with on-premise resources by using [Secure Gateway](https://www.ibm.com/cloud/secure-gateway). The use case demonstrates how you can allow IBM Cloud Functions access to your on-premise resources such as databases and web applications. This code pattern uses a local CouchDB deployment that will be accessed by the serverless functions. This code pattern will also use a local Minio, an open source object storage server, and will be served through a local Node.js web application. The local resources will be exposed through a Secure Gateway tunnel.
 
 The serverless functions for CouchDB will utilize the existing [OpenWhisk's Cloudant package](https://cloud.ibm.com/docs/openwhisk/cloudant_actions.html#cloudant_actions). This is possible since Cloudant is based on CouchDB and has almost similar [APIs](https://cloud.ibm.com/docs/services/Cloudant/api/compare.html#comparison-of-ibm-cloudant-and-couchdb-api-endpoints). An action will be triggered by changes in the database. In this case, the action will output the document ID. Other actions such as creating and reading a document can be invoked through the `wsk` or `ibmcloud fn` command. Another scenario is executing actions via REST APIs. The actions will interact with the local Node.js web application that's using an object storage. The actions will create a bucket and an object from a URL. All the actions will utilize the Secure Gateway tunnel.
